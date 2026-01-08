@@ -239,28 +239,42 @@ class FirestoreSessionService(BaseSessionService):
 
         # Prepare State Updates
         # We separate state deltas into App, User, and Session scope
+        app_updates = {}
+        user_updates = {}
+        session_updates = {}
+
         if event.actions and event.actions.state_delta:
             for key, value in event.actions.state_delta.items():
-                if key.startswith(State.TEMP_PREFIX):
+                if not key or key.startswith(State.TEMP_PREFIX):
                     continue
                 
                 if key.startswith(State.APP_PREFIX):
                     # App State
                     clean_key = key.removeprefix(State.APP_PREFIX)
-                    batch.set(app_ref, {clean_key: value}, merge=True)
+                    if clean_key:
+                        app_updates[clean_key] = value
                 elif key.startswith(State.USER_PREFIX):
                     # User State
                     clean_key = key.removeprefix(State.USER_PREFIX)
-                    batch.set(user_ref, {clean_key: value}, merge=True)
+                    if clean_key:
+                        user_updates[clean_key] = value
                 else:
                     # Session State
                     # Update session document 'state' field
                     # Firestore 'merge=True' works on top level. 
                     # To update nested 'state.key', we need dot notation
-                    batch.update(session_ref, {f"state.{key}": value})
+                    session_updates[f"state.{key}"] = value
+
+        # Apply updates
+        if app_updates:
+            batch.set(app_ref, app_updates, merge=True)
+        
+        if user_updates:
+            batch.set(user_ref, user_updates, merge=True)
 
         # Also update last_update_time on session
-        batch.update(session_ref, {"last_update_time": session.last_update_time})
+        session_updates["last_update_time"] = session.last_update_time
+        batch.update(session_ref, session_updates)
 
         await batch.commit()
         return event
