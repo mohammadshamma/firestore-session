@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 from firestore_session import firestore_session_service_factory
 
@@ -17,13 +17,14 @@ from firestore_session import firestore_session_service_factory
     ("firestore://", None, None),
 ])
 def test_factory_uri_parsing(uri, expected_project, expected_database):
-    """Verifies that the factory correctly parses the ADK URI."""
-    with patch("firestore_session.factory.FirestoreSessionService") as mock_service:
-        # Call the factory
+    """Verifies that the factory correctly triggers Firestore client initialization."""
+    # Mock the Firestore AsyncClient constructor used inside FirestoreSessionService
+    with patch("firestore_session.firestore_session_service.firestore.AsyncClient") as mock_client:
+        # Call the factory (which creates the real FirestoreSessionService)
         firestore_session_service_factory(uri)
         
-        # Verify the constructor was called with expected arguments
-        mock_service.assert_called_once_with(
+        # Verify the Firestore AsyncClient was initialized with expected arguments
+        mock_client.assert_called_once_with(
             project=expected_project,
             database=expected_database
         )
