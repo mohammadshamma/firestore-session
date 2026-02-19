@@ -73,7 +73,6 @@ app = get_fast_api_app(
 ## Standalone Usage
 
 ```python
-from google.cloud import firestore
 from firestore_session import FirestoreSessionService
 
 # Explicitly passing project/database
@@ -82,9 +81,8 @@ session_service = FirestoreSessionService(
     database="my-database"
 )
 
-# Or pass a pre-initialized AsyncClient
-client = firestore.AsyncClient(project="p", database="d")
-session_service = FirestoreSessionService(client=client)
+# Or use environment variables (GOOGLE_CLOUD_PROJECT, etc.)
+session_service = FirestoreSessionService()
 ```
 
 ## Dependencies
