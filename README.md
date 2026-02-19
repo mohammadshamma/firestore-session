@@ -27,59 +27,75 @@ dependencies = [
 ]
 ```
 
+## Configuration
+
+The `FirestoreSessionService` can be configured via constructor arguments, environment variables, or through the Google ADK service registry.
+
+### Precedence
+1. **Constructor Arguments**: Explicit `project` and `database` passed to the class.
+2. **Environment Variables**: `GOOGLE_CLOUD_PROJECT` and `GOOGLE_DATABASE`.
+3. **Default Credentials**: Standard Google Cloud application default credentials.
+
 ## Usage with Google ADK
 
-To use the `FirestoreSessionService` with Google ADK, you must register it with the ADK `ServiceRegistry` before creating your application. This allows ADK to instantiate and use the Firestore service based on a URI.
+To use the `FirestoreSessionService` with Google ADK, register it with the ADK `ServiceRegistry`. This allows you to point your agents to Firestore using a URI.
 
 ### 1. Register the Service
 
-In your main serving file (e.g., `serving.py`), register a factory function for the Firestore session service:
+In your main entry point (e.g., `serving.py`), define a factory function that parses the ADK URI.
 
 ```python
+from urllib.parse import urlparse
 from google.adk.cli.service_registry import get_service_registry
 from firestore_session import FirestoreSessionService
 
-# Define a factory function that returns the service instance
 def firestore_session_factory(uri: str, **kwargs):
-    # You can initialize the Firestore client here or use default credentials
-    return FirestoreSessionService()
+    """
+    Parses a URI like: firestore://my-gcp-project/my-database-instance
+    """
+    parsed = urlparse(uri)
+    project_id = parsed.netloc or None
+    # Remove leading slash from path to get database name
+    database_id = parsed.path.lstrip('/') or None
 
-# Register it under a specific scheme (e.g., "firestore")
+    return FirestoreSessionService(
+        project=project_id,
+        database=database_id
+    )
+
+# Register the "firestore" scheme
 get_service_registry().register_session_service("firestore", firestore_session_factory)
 ```
 
 ### 2. Configure the ADK App
 
-When initializing your FastAPI application using ADK, specify the URI scheme you registered:
+Pass the URI to `get_fast_api_app`.
 
 ```python
 from google.adk.cli.fast_api import get_fast_api_app
 
 app = get_fast_api_app(
     agents_dir="path/to/agents",
-    session_service_uri="firestore://default", # Uses the registered "firestore" service
+    session_service_uri="firestore://my-project-id/my-database", 
     web=True
 )
 ```
 
 ## Standalone Usage
 
-You can also use the service directly without the full ADK registry:
-
 ```python
 from google.cloud import firestore
 from firestore_session import FirestoreSessionService
 
-# Initialize with an existing client
-client = firestore.AsyncClient()
-session_service = FirestoreSessionService(client=client)
-
-# Create a new session
-session = await session_service.create_session(
-    app_name="my-app",
-    user_id="user-123",
-    metadata={"source": "telegram"}
+# Explicitly passing project/database
+session_service = FirestoreSessionService(
+    project="my-project-id",
+    database="my-database"
 )
+
+# Or pass a pre-initialized AsyncClient
+client = firestore.AsyncClient(project="p", database="d")
+session_service = FirestoreSessionService(client=client)
 ```
 
 ## Dependencies
