@@ -38,23 +38,18 @@ class FirestoreSessionService(BaseSessionService):
 
     def __init__(
         self, 
-        client: Optional[firestore.AsyncClient] = None,
         project: Optional[str] = None,
         database: Optional[str] = None
     ):
         """
         Args:
-            client: Optional Firestore AsyncClient. If not provided, one will be created.
             project: Optional Google Cloud Project ID.
             database: Optional Firestore database instance name.
         """
-        if client:
-            self._client = client
-        else:
-            # Initialize the client with provided project/database identifiers
-            # If identifiers are None, AsyncClient uses GOOGLE_CLOUD_PROJECT
-            # and GOOGLE_DATABASE env vars or default credentials.
-            self._client = firestore.AsyncClient(project=project, database=database)
+        # Initialize the client with provided project/database identifiers
+        # If identifiers are None, AsyncClient uses GOOGLE_CLOUD_PROJECT
+        # and GOOGLE_DATABASE env vars or default credentials.
+        self._client = firestore.AsyncClient(project=project, database=database)
 
     async def create_session(
         self,
