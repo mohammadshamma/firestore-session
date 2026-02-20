@@ -24,6 +24,12 @@ jobs:
         pip install .
         pip install pytest pytest-asyncio pytest-mock requests
 
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:
