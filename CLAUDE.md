@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`wisal-firestore-session` is a Firestore-based implementation of Google ADK's `BaseSessionService`. It persists agent sessions, events, and hierarchical state (app/user/session scopes) to Cloud Firestore.
+`firestore-session` is a Firestore-based implementation of Google ADK's `BaseSessionService`. It persists agent sessions, events, and hierarchical state (app/user/session scopes) to Cloud Firestore.
 
 ## Commands
 
